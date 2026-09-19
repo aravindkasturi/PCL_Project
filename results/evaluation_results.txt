@@ -1,0 +1,27 @@
+PCL QUALITY MODEL - TEST EVALUATION
+=============================================
+
+Test samples : 300
+Features used: 26
+
+Accuracy     : 0.9267
+Precision    : 0.9000
+Recall       : 0.9600
+F1-score     : 0.9290
+ROC-AUC      : 0.9739
+
+Confusion Matrix
+                 Predicted
+              GOOD      POOR
+Actual GOOD    144         6
+Actual POOR     16       134
+
+Classification Report
+              precision    recall  f1-score   support
+
+        GOOD       0.90      0.96      0.93       150
+        POOR       0.96      0.89      0.92       150
+
+    accuracy                           0.93       300
+   macro avg       0.93      0.93      0.93       300
+weighted avg       0.93      0.93      0.93       300

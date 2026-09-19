@@ -1,0 +1,27 @@
+record_id,sample_id,source_excel_row,time_s,displacement_mm,force_n,provenance,note
+EXP_T1,T1,2,0.0,0.0,-0.022,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,12,0.667,0.888,0.142,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,22,1.333,1.763,0.468,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,33,2.0,2.65,0.591,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,64,4.133,5.474,0.713,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,72,4.667,6.189,0.734,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,82,5.333,7.064,0.774,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,93,6.0,7.952,0.795,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,102,6.667,8.84,0.815,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,113,7.333,9.714,0.815,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,123,8.0,10.603,0.876,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,134,8.667,11.756,0.876,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,142,9.333,12.365,0.897,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,152,10.0,13.253,0.897,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,168,11.067,14.671,0.938,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,178,11.733,15.546,0.938,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,186,12.267,16.261,0.917,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,206,13.667,18.117,0.836,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,213,14.133,18.727,0.836,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,218,14.467,19.177,0.774,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,228,14.733,19.522,0.734,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,234,15.067,19.929,0.015,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,244,15.733,20.838,0.003,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,251,16.533,21.907,-0.001,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,265,17.533,23.232,-0.022,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.
+EXP_T1,T1,280,18.533,24.558,-0.001,REAL_RECOVERED_FROM_SCREENSHOTS,Verified readable anchor point; not a complete raw export.

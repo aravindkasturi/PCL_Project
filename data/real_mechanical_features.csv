@@ -1,0 +1,2 @@
+record_id,sample_id,mech_max_force_n,mech_displacement_at_max_mm,mech_force_mean_n,mech_force_std_n,mech_curve_slope_n_per_mm,mech_energy_proxy,source,data_status
+EXP_T1,T1,0.938,14.671,0.589923076923077,0.3703122923238626,-0.008841606327134066,14.705236499999998,REAL_RECOVERED_FROM_SCREENSHOTS,DERIVED_FROM_RECOVERED_POINTS

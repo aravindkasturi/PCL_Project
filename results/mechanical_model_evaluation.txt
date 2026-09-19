@@ -1,0 +1,43 @@
+PCL MECHANICAL-ONLY MODEL - TEST EVALUATION
+============================================
+
+IMPORTANT:
+This model was trained and evaluated using the existing synthetic research-based PCL train/test datasets.
+It has NOT been validated against experimentally labelled real PCL samples.
+
+Training samples : 1200
+Test samples     : 300
+Features used     : 6
+
+Features:
+- mech_max_force_n
+- mech_displacement_at_max_mm
+- mech_force_mean_n
+- mech_force_std_n
+- mech_curve_slope_n_per_mm
+- mech_energy_proxy
+
+Metrics
+-------
+Accuracy  : 0.8967
+Precision : 0.8889
+Recall    : 0.9067
+F1-score  : 0.8977
+ROC-AUC   : 0.9578
+
+Confusion Matrix
+                 Predicted
+              GOOD      POOR
+Actual GOOD    136        14
+Actual POOR     17       133
+
+Classification Report
+---------------------
+              precision    recall  f1-score   support
+
+        GOOD       0.89      0.91      0.90       150
+        POOR       0.90      0.89      0.90       150
+
+    accuracy                           0.90       300
+   macro avg       0.90      0.90      0.90       300
+weighted avg       0.90      0.90      0.90       300
