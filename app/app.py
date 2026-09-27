@@ -1,8 +1,11 @@
 import os
 import joblib
+import re
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+
+from model.analyze_tensile_curve import analyze_tensile_curve
 
 
 # ============================================================
@@ -33,10 +36,34 @@ REAL_MASTER_PATH = (
 
 RESULTS_DIR = "results"
 
+REAL_POINTS_PATH = "data/real_tensile_verified_points.csv"
+TENSILE_CURVES_PATH = "data/tensile_curve_data.csv"
+
 os.makedirs(
     RESULTS_DIR,
     exist_ok=True
 )
+
+# Store tensile analysis results for newly added samples.
+if "tensile_analysis_results" not in st.session_state:
+    st.session_state["tensile_analysis_results"] = {}
+
+if "tensile_curve_data" not in st.session_state:
+    st.session_state["tensile_curve_data"] = {}
+
+
+# Load previously saved tensile curves so breakpoint analysis survives
+# Streamlit restarts/redeployments.
+if os.path.exists(TENSILE_CURVES_PATH):
+    try:
+        saved_tensile = pd.read_csv(TENSILE_CURVES_PATH)
+        if "sample_id" in saved_tensile.columns:
+            for saved_id, saved_group in saved_tensile.groupby("sample_id"):
+                curve_df = saved_group.drop(columns=["sample_id"]).copy()
+                st.session_state["tensile_curve_data"][str(saved_id)] = curve_df
+                st.session_state["tensile_analysis_results"][str(saved_id)] = analyze_tensile_curve(curve_df)
+    except Exception:
+        pass
 
 
 # ============================================================
@@ -532,6 +559,126 @@ with real_tab:
 
 
                 # ------------------------------------------------
+                # ESTIMATED FAILURE / BREAK REGION
+                # ------------------------------------------------
+
+                st.subheader(
+                    "Estimated Failure / Break Region"
+                )
+
+                if os.path.exists(REAL_POINTS_PATH):
+
+                    try:
+
+                        tensile_points = pd.read_csv(
+                            REAL_POINTS_PATH
+                        )
+
+                        # Use the selected experimental sample only.
+                        tensile_points = tensile_points[
+                            tensile_points["sample_id"].astype(str)
+                            == selected_real_sample
+                        ].copy()
+
+                        if len(tensile_points) >= 2:
+
+                            tensile_points = (
+                                tensile_points
+                                .sort_values("displacement_mm")
+                                .reset_index(drop=True)
+                            )
+
+                            # Calculate consecutive force drops.
+                            tensile_points["force_drop_n"] = (
+                                tensile_points["force_n"].shift(1)
+                                - tensile_points["force_n"]
+                            )
+
+                            break_idx = (
+                                tensile_points["force_drop_n"].idxmax()
+                            )
+
+                            if pd.notna(break_idx) and break_idx > 0:
+
+                                before = tensile_points.loc[
+                                    break_idx - 1
+                                ]
+
+                                after = tensile_points.loc[
+                                    break_idx
+                                ]
+
+                                break_start_disp = float(
+                                    before["displacement_mm"]
+                                )
+
+                                break_end_disp = float(
+                                    after["displacement_mm"]
+                                )
+
+                                force_drop = float(
+                                    after["force_drop_n"]
+                                )
+
+                                fc1, fc2 = st.columns(2)
+
+                                with fc1:
+
+                                    st.metric(
+                                        "Estimated Failure Region",
+                                        (
+                                            f"{break_start_disp:.3f}"
+                                            f"–"
+                                            f"{break_end_disp:.3f} mm"
+                                        )
+                                    )
+
+                                with fc2:
+
+                                    st.metric(
+                                        "Force Drop",
+                                        f"{force_drop:.3f} N"
+                                    )
+
+                                st.caption(
+                                    "Estimated from the largest "
+                                    "consecutive force drop in the "
+                                    "recovered tensile points. This is "
+                                    "not an exact physical break point."
+                                )
+
+                            else:
+
+                                st.info(
+                                    "A failure region could not be "
+                                    "estimated from the available "
+                                    "tensile points."
+                                )
+
+                        else:
+
+                            st.info(
+                                "Not enough recovered tensile points "
+                                "are available for failure-region analysis."
+                            )
+
+                    except Exception as e:
+
+                        st.warning(
+                            "Unable to calculate the estimated "
+                            "failure region from the recovered tensile data."
+                        )
+
+                        st.exception(e)
+
+                else:
+
+                    st.info(
+                        "Recovered tensile-point data is not available."
+                    )
+
+
+                # ------------------------------------------------
                 # TENSILE VISUALIZATION
                 # ------------------------------------------------
 
@@ -885,6 +1032,26 @@ with ai_tab:
 
             st.divider()
 
+            # ------------------------------------------------
+            # OPTIONAL TENSILE CURVE
+            # ------------------------------------------------
+
+            st.subheader(
+                "📈 Optional Tensile Failure Analysis"
+            )
+
+            st.caption(
+                "Upload a tensile CSV to calculate the "
+                "sample-specific estimated failure region. "
+                "Required columns: displacement_mm and force_n. "
+                "time_s is optional."
+            )
+
+            tensile_file = st.file_uploader(
+                "Upload Tensile CSV",
+                type=["csv"],
+                key="new_sample_tensile_file"
+            )
 
             submitted = st.form_submit_button(
                 "🔬 Add Sample & Predict Quality",
@@ -1065,6 +1232,34 @@ with ai_tab:
                     "prediction_confidence"
                 ] = new_confidence
 
+                # ------------------------------------------------
+                # OPTIONAL TENSILE ANALYSIS
+                # ------------------------------------------------
+
+                tensile_result = None
+
+                if tensile_file is not None:
+
+                    try:
+
+                        tensile_df = pd.read_csv(
+                            tensile_file
+                        )
+
+                        tensile_result = analyze_tensile_curve(
+                            tensile_df
+                        )
+
+                    except Exception as e:
+
+                        st.error(
+                            "The tensile CSV could not be analyzed. "
+                            "Please make sure it contains numeric "
+                            "displacement_mm and force_n columns."
+                        )
+
+                        st.exception(e)
+                        st.stop()
 
                 # ------------------------------------------------
                 # SAVE
@@ -1091,11 +1286,54 @@ with ai_tab:
                     "selected_sample"
                 ] = new_id
 
+                if tensile_result is not None:
+                    st.session_state[
+                        "tensile_analysis_results"
+                    ][new_id] = tensile_result
+
+                    st.session_state[
+                        "tensile_curve_data"
+                    ][new_id] = tensile_df.copy()
+
+                    # Persist the uploaded curve so the sample's tensile
+                    # analysis remains available after Streamlit restarts.
+                    curve_to_save = tensile_df.copy()
+                    curve_to_save["sample_id"] = new_id
+                    if os.path.exists(TENSILE_CURVES_PATH):
+                        existing_curves = pd.read_csv(TENSILE_CURVES_PATH)
+                        if "sample_id" in existing_curves.columns:
+                            existing_curves = existing_curves[
+                                existing_curves["sample_id"].astype(str) != str(new_id)
+                            ]
+                        combined_curves = pd.concat(
+                            [existing_curves, curve_to_save],
+                            ignore_index=True
+                        )
+                    else:
+                        combined_curves = curve_to_save
+                    combined_curves.to_csv(
+                        TENSILE_CURVES_PATH,
+                        index=False
+                    )
+
+                else:
+                    st.session_state[
+                        "tensile_analysis_results"
+                    ].pop(
+                        new_id,
+                        None
+                    )
+
+                    st.session_state[
+                        "tensile_curve_data"
+                    ].pop(
+                        new_id,
+                        None
+                    )
 
                 st.success(
                     f"{new_id} added successfully."
                 )
-
 
                 st.rerun()
 
@@ -1272,6 +1510,139 @@ with ai_tab:
             f"⚠ Quality Result: POOR — {selected_sample}"
         )
 
+
+    # ========================================================
+    # TENSILE FAILURE ANALYSIS FOR SELECTED SAMPLE
+    # ========================================================
+
+    tensile_result = st.session_state[
+        "tensile_analysis_results"
+    ].get(
+        selected_sample
+    )
+
+    if tensile_result is not None:
+
+        st.subheader(
+            "📈 Tensile Failure Analysis"
+        )
+
+        tc1, tc2, tc3 = st.columns(3)
+
+        with tc1:
+
+            st.metric(
+                "Maximum Force",
+                f"{tensile_result['max_force_n']:.3f} N"
+            )
+
+        with tc2:
+
+            st.metric(
+                "Failure Region",
+                (
+                    f"{tensile_result['failure_start_mm']:.3f}"
+                    f"–"
+                    f"{tensile_result['failure_end_mm']:.3f} mm"
+                )
+            )
+
+        with tc3:
+
+            st.metric(
+                "Force Drop",
+                f"{tensile_result['force_drop_n']:.3f} N"
+            )
+
+        st.caption(
+            "Failure region is estimated from the largest "
+            "consecutive force drop in the uploaded tensile curve. "
+            "It is not an exact physical break point."
+        )
+
+        tensile_curve = st.session_state[
+            "tensile_curve_data"
+        ].get(
+            selected_sample
+        )
+
+        if tensile_curve is not None:
+
+            st.subheader(
+                "📊 Tensile Force–Displacement Curve"
+            )
+
+            curve_plot = tensile_curve[
+                ["displacement_mm", "force_n"]
+            ].copy()
+
+            curve_plot["displacement_mm"] = pd.to_numeric(
+                curve_plot["displacement_mm"],
+                errors="coerce"
+            )
+
+            curve_plot["force_n"] = pd.to_numeric(
+                curve_plot["force_n"],
+                errors="coerce"
+            )
+
+            curve_plot = curve_plot.dropna().sort_values(
+                "displacement_mm"
+            )
+
+            fig, ax = plt.subplots(
+                figsize=(10, 5)
+            )
+
+            ax.plot(
+                curve_plot["displacement_mm"],
+                curve_plot["force_n"],
+                marker="o",
+                markersize=3,
+                linewidth=2,
+                label="Tensile curve"
+            )
+
+            max_idx = curve_plot["force_n"].idxmax()
+            max_point = curve_plot.loc[max_idx]
+
+            ax.scatter(
+                max_point["displacement_mm"],
+                max_point["force_n"],
+                s=70,
+                zorder=5,
+                label="Maximum force"
+            )
+
+            ax.axvspan(
+                tensile_result["failure_start_mm"],
+                tensile_result["failure_end_mm"],
+                alpha=0.20,
+                label="Estimated failure region"
+            )
+
+            ax.set_title(
+                f"{selected_sample} — Tensile Analysis"
+            )
+            ax.set_xlabel(
+                "Displacement (mm)"
+            )
+            ax.set_ylabel(
+                "Force (N)"
+            )
+            ax.grid(
+                True,
+                alpha=0.25
+            )
+            ax.legend()
+            fig.tight_layout()
+
+            st.pyplot(
+                fig,
+                use_container_width=True
+            )
+
+            plt.close(fig)
 
     # ========================================================
     # PROPERTY TABS
