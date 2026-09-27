@@ -6,13 +6,19 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Ensure the project root is available when Streamlit Cloud runs app/app.py
-# directly, so the sibling model package can be imported reliably.
+# Load the tensile analyzer directly from the model folder.
+# This avoids relying on Python package-path behavior in Streamlit Cloud.
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+ANALYZER_PATH = os.path.join(PROJECT_ROOT, "model", "analyze_tensile_curve.py")
 
-from model.analyze_tensile_curve import analyze_tensile_curve
+import importlib.util
+
+spec = importlib.util.spec_from_file_location("analyze_tensile_curve_module", ANALYZER_PATH)
+if spec is None or spec.loader is None:
+    raise ImportError(f"Could not load tensile analyzer from: {ANALYZER_PATH}")
+analyzer_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(analyzer_module)
+analyze_tensile_curve = analyzer_module.analyze_tensile_curve
 
 
 # ============================================================
