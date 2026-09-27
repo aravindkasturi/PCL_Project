@@ -1515,11 +1515,36 @@ with ai_tab:
     # TENSILE FAILURE ANALYSIS FOR SELECTED SAMPLE
     # ========================================================
 
-    tensile_result = st.session_state[
-        "tensile_analysis_results"
-    ].get(
-        selected_sample
-    )
+    # Read the persisted tensile curve directly on every rerun.
+    # This makes the selected-sample analysis independent of Streamlit
+    # session state and robust after Cloud restarts/redeployments.
+    tensile_result = None
+    tensile_curve = None
+
+    if os.path.exists(TENSILE_CURVES_PATH):
+        try:
+            persisted_tensile = pd.read_csv(
+                TENSILE_CURVES_PATH
+            )
+
+            if "sample_id" in persisted_tensile.columns:
+                selected_curve = persisted_tensile[
+                    persisted_tensile["sample_id"].astype(str)
+                    == str(selected_sample)
+                ].copy()
+
+                if not selected_curve.empty:
+                    tensile_curve = selected_curve.drop(
+                        columns=["sample_id"]
+                    ).copy()
+
+                    tensile_result = analyze_tensile_curve(
+                        tensile_curve
+                    )
+
+        except Exception:
+            tensile_result = None
+            tensile_curve = None
 
     if tensile_result is not None:
 
@@ -1558,12 +1583,6 @@ with ai_tab:
             "Failure region is estimated from the largest "
             "consecutive force drop in the uploaded tensile curve. "
             "It is not an exact physical break point."
-        )
-
-        tensile_curve = st.session_state[
-            "tensile_curve_data"
-        ].get(
-            selected_sample
         )
 
         if tensile_curve is not None:
